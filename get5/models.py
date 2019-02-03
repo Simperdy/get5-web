@@ -9,6 +9,8 @@ import requests
 import datetime
 import string
 import random
+import socket
+import urlparse
 
 
 class User(db.Model):
@@ -69,8 +71,10 @@ class GameServer(db.Model):
         return rv
 
     def send_rcon_command(self, command, raise_errors=False, num_retries=3, timeout=3.0):
+        ip_addr = socket.gethostbyname(self.ip_string)
+
         return util.send_rcon_command(
-            self.ip_string, self.port, self.rcon_password,
+            ip_addr, self.port, self.rcon_password,
                                       command, raise_errors, num_retries, timeout)
 
     def get_hostport(self):
@@ -334,8 +338,12 @@ class Match(db.Model):
         if not server:
             return False
 
-        url = url_for('match.match_config', matchid=self.id,
-                      _external=True, _scheme='http')
+        if 'WEB_API_URL' in app.config:
+            url = app.config['WEB_API_URL']
+            url = urlparse.urljoin(url, url_for('match.match_config', matchid=self.id))
+        else:
+            url = url_for('match.match_config', matchid=self.id,
+                        _external=True, _scheme='http')
         # Remove http protocal since the get5 plugin can't parse args with the
         # : in them.
         url = url.replace("http://", "")
