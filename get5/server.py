@@ -19,7 +19,7 @@ class ServerForm(Form):
     ip_string = StringField('Server IP',
                             validators=[
                                 validators.required(),
-                                validators.IPAddress()])
+                                validators.Length(max=32)])
 
     port = IntegerField('Server port', default=27015,
                         validators=[validators.required()])
